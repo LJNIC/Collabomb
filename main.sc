@@ -34,10 +34,14 @@ enum TileType plain
     Wall
     Goal
 
+struct Bomb plain
+    pos   : ivec2
+    timer : u32
+
 struct BoardState
     tiles      : (Array TileType)
     dimensions : ivec2
-    boxes      : (Array ivec2)
+    bombs      : (Array Bomb)
     player     : ivec2
 
     inline tile@ (self pos)
@@ -45,23 +49,23 @@ struct BoardState
 
 struct GameSnapshot
     player : ivec2
-    boxes : (Array ivec2)
+    bombs  : (Array Bomb)
 
     inline __typecall (cls board-state)
-        local boxes : (Array ivec2)
-        for box in board-state.boxes
-            'append boxes (copy box)
+        local bombs : (Array Bomb)
+        for bomb in board-state.bombs
+            'append bombs (copy bomb)
 
         super-type.__typecall cls
             player = (copy board-state.player)
-            boxes = (deref boxes)
+            bombs = (deref bombs)
 
 fn rollback-state (history board)
     if ((countof history) > 0)
         let snapshot = ('last history)
         board.player = (copy snapshot.player)
-        for i box in (enumerate snapshot.boxes)
-            board.boxes @ i = (copy box)
+        for i bomb in (enumerate snapshot.bombs)
+            board.bombs @ i = (copy bomb)
         'pop history
         true
     else
@@ -91,7 +95,10 @@ fn parse-board (n)
             board.player = (ivec2 x y)
         case (char "B")
             'append board.tiles TileType.Free
-            'append board.boxes (ivec2 x y)
+            local bomb : Bomb 
+            bomb.pos = (ivec2 x y)
+            bomb.timer = 3
+            'append board.bombs bomb
         case 10:i8
             board.dimensions.y += 1
             repeat 0 (y + 1)
@@ -113,18 +120,17 @@ fn (cfg)
 global player-spr : Sprite
 global wall-spr : Sprite
 global goal-spr : Sprite
-global box-spr : Sprite
+global bomb-spr : Sprite
 global back-spr : Sprite
 
 @@ 'on bottle.load
 fn ()
     board = (parse-board current-level)
-    player-spr = (Sprite "square.png")
     wall-spr = (Sprite "grey.png")
     goal-spr = (Sprite "blue.png")
-    box-spr = (Sprite "square.png")
-    back-spr = (Sprite "brown.png")
-
+    bomb-spr = (Sprite "brown.png")
+    back-spr = (Sprite "black.png")
+    player-spr = (Sprite "square.png")
 
 fn try-move (delta)
     # we record the state before trying to move, but only append
@@ -138,11 +144,11 @@ fn try-move (delta)
             t == TileType.Free
             t == TileType.Goal
 
-    for box in board.boxes
-        if (new-pos == box)
-            let bproj = ('tile@ board (box + delta))
+    for bomb in board.bombs
+        if (new-pos == bomb.pos)
+            let bproj = ('tile@ board (bomb.pos + delta))
             if (free? bproj)
-                box += delta
+                bomb.pos += delta
             else
                 return false
     if (free? proj)
@@ -153,8 +159,8 @@ fn try-move (delta)
 
 fn win-condition? ()
     # check if we solved the level
-    for box in board.boxes
-        if (('tile@ board box) != TileType.Goal)
+    for bomb in board.bombs
+        if (('tile@ board bomb.pos) != TileType.Goal)
             return false
     true
 
@@ -178,9 +184,12 @@ fn ()
         moved? = (rollback-state history board)
     
     if moved?
-        print "moved"
-    else 
-        print "didn't move"
+        for i in (rrange (countof board.bombs))
+            let bomb = (board.bombs @ i)
+            bomb.timer -= 1
+            if (bomb.timer == 0)
+                ('remove board.bombs i)
+
 
     if (win-condition?)
         current-level += 1
@@ -209,8 +218,8 @@ fn ()
 
         bottle.graphics.sprite tsprite ((vec2 x y) * 16)
 
-    for box in board.boxes
-        bottle.graphics.sprite box-spr ((vec2 box) * 16)
+    for bomb in board.bombs
+        bottle.graphics.sprite bomb-spr ((vec2 bomb.pos) * 16)
 
 bottle.run;
 
