@@ -7,10 +7,14 @@ using import UTF-8
 import .bottle
 from bottle.graphics let Sprite
 
+global directions = (arrayof ivec2 (ivec2 1 0) (ivec2 0 1) (ivec2 -1 0) (ivec2 0 -1))
+
 global levels =
     arrayof String
         """"XXXXXXXXXX
-            XGOOBOOOPX
+            XOOFOOOOOX
+            XGFOOBOOPX
+            XOOFOOOOOX
             XXXXXXXXXX
 
         """"XXXXXXXXXXXXX
@@ -32,6 +36,7 @@ global levels =
 enum TileType plain
     Free
     Wall
+    Fragile
     Goal
 
 struct Bomb plain
@@ -46,6 +51,9 @@ struct BoardState
 
     inline tile@ (self pos)
         self.tiles @ (pos.y * self.dimensions.x + pos.x)
+    
+    inline clear@ (self pos)
+        self.tiles @ (pos.y * self.dimensions.x + pos.x) = TileType.Free
 
 struct GameSnapshot
     player : ivec2
@@ -93,11 +101,13 @@ fn parse-board (n)
         case (char "P")
             'append board.tiles TileType.Free
             board.player = (ivec2 x y)
+        case (char "F")
+            'append board.tiles TileType.Fragile
         case (char "B")
             'append board.tiles TileType.Free
             local bomb : Bomb 
             bomb.pos = (ivec2 x y)
-            bomb.timer = 3
+            bomb.timer = 5
             'append board.bombs bomb
         case 10:i8
             board.dimensions.y += 1
@@ -159,10 +169,10 @@ fn try-move (delta)
 
 fn win-condition? ()
     # check if we solved the level
-    for bomb in board.bombs
-        if (('tile@ board bomb.pos) != TileType.Goal)
-            return false
-    true
+    if (('tile@ board board.player) == TileType.Goal)
+        true
+    else
+        false
 
 @@ 'on bottle.update
 fn ()
@@ -188,8 +198,11 @@ fn ()
             let bomb = (board.bombs @ i)
             bomb.timer -= 1
             if (bomb.timer == 0)
-                ('remove board.bombs i)
-
+                for direction in directions
+                    let pos = (bomb.pos + direction)
+                    if (('tile@ board pos) == TileType.Fragile)
+                        'clear@ board pos
+                'remove board.bombs i
 
     if (win-condition?)
         current-level += 1
@@ -213,6 +226,8 @@ fn ()
                 wall-spr
             case TileType.Goal
                 goal-spr
+            case TileType.Fragile
+                wall-spr
             default
                 back-spr
 
