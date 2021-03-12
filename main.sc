@@ -185,6 +185,8 @@ fn ()
             try-move (ivec2 0 -1)
         elseif (bottle.input.pressed? 'Up)
             try-move (ivec2 0 1)
+        elseif (bottle.input.pressed? 'B)
+            true
         else
             false
 
