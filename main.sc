@@ -13,24 +13,25 @@ global levels =
     arrayof String
         """"XXXXXXXXXX
             XOOFOOOOOX
-            XGFOOBOOPX
+            XGFOO5OOPX
             XOOFOOOOOX
             XXXXXXXXXX
 
         """"XXXXXXXXXXXXX
-            XGXOOOOOOOOOX
             XOOOOOOOOOOOX
-            XOXOOOXXXXXXX
-            XOOOOOOOBOOPX
-            XXXOOOXXXXXXX
+            XOOFOOOOOOOOX
+            XOFGFOX9OPOOX
+            XOOFOOOOOOOOX
             XXXXXXXXXXXXX
 
         """"XXXXXXXXXXXXX
-            XOOOOOGOOOOOX
-            XOOOOOBOOOOOX
-            XGOOOBPBOOOGX
-            XOOOOOBOOOOOX
-            XOOOOOGOOOOOX
+            XOOOOOOOOOOOX
+            XOOXXOFXXXOOX
+            XOXOOOOOOOXOX
+            XOXOOO9OOOXOX
+            XOFOO8P7OOFOX
+            XXXOOOOOOOXOX
+            XXXXOOOOOOXGX
             XXXXXXXXXXXXX
 
 enum TileType plain
@@ -103,12 +104,22 @@ fn parse-board (n)
             board.player = (ivec2 x y)
         case (char "F")
             'append board.tiles TileType.Fragile
-        case (char "B")
+        pass (char "1") 
+        pass (char "2")
+        pass (char "3")
+        pass (char "4")
+        pass (char "5")
+        pass (char "6")
+        pass (char "7")
+        pass (char "8")
+        pass (char "9")
             'append board.tiles TileType.Free
             local bomb : Bomb 
             bomb.pos = (ivec2 x y)
-            bomb.timer = 5
+            bomb.timer = c - 48
             'append board.bombs bomb
+            (print c)
+        do;
         case 10:i8
             board.dimensions.y += 1
             repeat 0 (y + 1)
