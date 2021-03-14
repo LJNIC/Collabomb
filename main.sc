@@ -26,7 +26,7 @@ global levels =
 
         """"XXXXXXXXXXXXX
             XOOOOOOOOOOOX
-            XOOXXOFXXXOOX
+            XOOXXXFXXXOOX
             XOXOOOOOOOXOX
             XOXOOO9OOOXOX
             XOFOO8P7OOFOX
@@ -138,20 +138,30 @@ global history : (Array GameSnapshot)
 fn (cfg)
     cfg
 
-global player-spr : Sprite
-global wall-spr : Sprite
-global goal-spr : Sprite
-global bomb-spr : Sprite
-global back-spr : Sprite
+fn create-quad (x y)
+    let normal-x = (x / 160)
+    let normal-y = (y / 160)
+    (vec4 normal-x normal-y (normal-x + (16 / 160)) (normal-y + (16 / 160)))
+
+global player-spr : vec4
+global wall-spr   : vec4
+global goal-spr   : vec4 
+global bomb-spr   : vec4
+global back-spr   : vec4
+global tileset  : Sprite
+global bomb-quads : (Array vec4)
 
 @@ 'on bottle.load
 fn ()
     board = (parse-board current-level)
-    wall-spr = (Sprite "grey.png")
-    goal-spr = (Sprite "blue.png")
-    bomb-spr = (Sprite "brown.png")
-    back-spr = (Sprite "black.png")
-    player-spr = (Sprite "square.png")
+    wall-spr = (create-quad 32 0)
+    goal-spr = (create-quad 16 0)
+    bomb-spr = (create-quad 0 16)
+    back-spr = (create-quad 48 0)
+    player-spr = (create-quad 0 0)
+    tileset = (Sprite "tileset.png")
+    for i in (range 9)
+        'append bomb-quads (create-quad (i * 16) 16)
 
 fn try-move (delta)
     # we record the state before trying to move, but only append
@@ -186,7 +196,7 @@ fn win-condition? ()
         false
 
 @@ 'on bottle.update
-fn ()
+fn (dt)
     let moved? =
         if (bottle.input.pressed? 'Left)
             try-move (ivec2 -1 0)
@@ -244,10 +254,10 @@ fn ()
             default
                 back-spr
 
-        bottle.graphics.sprite tsprite ((vec2 x y) * 16)
+        bottle.graphics.sprite tileset ((vec2 x y) * 16) (quad = tsprite)
 
     for bomb in board.bombs
-        bottle.graphics.sprite bomb-spr ((vec2 bomb.pos) * 16)
+        bottle.graphics.sprite tileset ((vec2 bomb.pos) * 16) (quad = (bomb-quads @ (bomb.timer - 1)))
 
 bottle.run;
 
