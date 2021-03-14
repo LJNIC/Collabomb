@@ -143,22 +143,24 @@ fn create-quad (x y)
     let normal-y = (y / 160)
     (vec4 normal-x normal-y (normal-x + (16 / 160)) (normal-y + (16 / 160)))
 
-global player-spr : vec4
-global wall-spr   : vec4
-global goal-spr   : vec4 
-global bomb-spr   : vec4
-global back-spr   : vec4
+global player-spr  : vec4
+global wall-spr    : vec4
+global goal-spr    : vec4 
+global bomb-spr    : vec4
+global back-spr    : vec4
+global fragile-spr : vec4
 global tileset  : Sprite
 global bomb-quads : (Array vec4)
 
 @@ 'on bottle.load
 fn ()
     board = (parse-board current-level)
-    wall-spr = (create-quad 32 0)
-    goal-spr = (create-quad 16 0)
-    bomb-spr = (create-quad 0 16)
-    back-spr = (create-quad 48 0)
     player-spr = (create-quad 0 0)
+    goal-spr = (create-quad 16 0)
+    wall-spr = (create-quad 32 0)
+    fragile-spr = (create-quad 48 0)
+    back-spr = (create-quad 64 0)
+    bomb-spr = (create-quad 0 16)
     tileset = (Sprite "tileset.png")
     for i in (range 9)
         'append bomb-quads (create-quad (i * 16) 16)
@@ -250,7 +252,7 @@ fn ()
             case TileType.Goal
                 goal-spr
             case TileType.Fragile
-                wall-spr
+                fragile-spr
             default
                 back-spr
 
