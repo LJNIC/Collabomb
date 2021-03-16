@@ -8,14 +8,21 @@ import .bottle
 from bottle.graphics let Sprite
 
 global directions = (arrayof ivec2 (ivec2 1 0) (ivec2 0 1) (ivec2 -1 0) (ivec2 0 -1))
+global scaling = 3.0
 
 global levels =
     arrayof String
         """"XXXXXXXXXX
-            XOOFOOOOOX
-            XGFOO5OOPX
-            XOOFOOOOOX
+            XOOOOOOOOX
+            XGOOOVOOPX
+            XOOOOOOOOX
             XXXXXXXXXX
+
+        """"XXXXXXXXXXXX
+            XOOFOOOOOOOX
+            XGFOO3OPOVOX
+            XOOFOOOOOOOX
+            XXXXXXXXXXXX
 
         """"XXXXXXXXXXXXX
             XOOOOOOOOOOOX
@@ -25,13 +32,14 @@ global levels =
             XXXXXXXXXXXXX
 
         """"XXXXXXXXXXXXX
-            XOOOOOOOOOOOX
-            XOOXXXFXXXOOX
+            XOOOOXGXOOOOX
+            XOOOOXVXOOOOX
+            XOXXXXFXXXXOX
             XOXOOOOOOOXOX
             XOXOOO9OOOXOX
             XOFOO8P7OOFOX
-            XXXOOOOOOOXOX
-            XXXXOOOOOOXGX
+            XVXOOOOOOOXVX
+            XGXOOOOOOOXGX
             XXXXXXXXXXXXX
 
 enum TileType plain
@@ -48,6 +56,7 @@ struct BoardState
     tiles      : (Array TileType)
     dimensions : ivec2
     bombs      : (Array Bomb)
+    boxes      : (Array ivec2)
     player     : ivec2
 
     inline tile@ (self pos)
@@ -59,6 +68,7 @@ struct BoardState
 struct GameSnapshot
     player : ivec2
     bombs  : (Array Bomb)
+    boxes  : (Array vec2)
 
     inline __typecall (cls board-state)
         local bombs : (Array Bomb)
@@ -104,6 +114,9 @@ fn parse-board (n)
             board.player = (ivec2 x y)
         case (char "F")
             'append board.tiles TileType.Fragile
+        case (char "V")
+            'append board.tiles TileType.Free
+            'append board.boxes (ivec2 x y) 
         pass (char "1") 
         pass (char "2")
         pass (char "3")
@@ -118,7 +131,6 @@ fn parse-board (n)
             bomb.pos = (ivec2 x y)
             bomb.timer = c - 48
             'append board.bombs bomb
-            (print c)
         do;
         case 10:i8
             board.dimensions.y += 1
@@ -146,9 +158,9 @@ fn create-quad (x y)
 global player-spr  : vec4
 global wall-spr    : vec4
 global goal-spr    : vec4 
-global bomb-spr    : vec4
 global back-spr    : vec4
 global fragile-spr : vec4
+global box-spr     : vec4
 global tileset  : Sprite
 global bomb-quads : (Array vec4)
 
@@ -159,8 +171,8 @@ fn ()
     goal-spr = (create-quad 16 0)
     wall-spr = (create-quad 32 0)
     fragile-spr = (create-quad 48 0)
-    back-spr = (create-quad 64 0)
-    bomb-spr = (create-quad 0 16)
+    box-spr = (create-quad 64 0)    
+    back-spr = (create-quad 128 0)
     tileset = (Sprite "tileset.png")
     for i in (range 9)
         'append bomb-quads (create-quad (i * 16) 16)
@@ -184,6 +196,15 @@ fn try-move (delta)
                 bomb.pos += delta
             else
                 return false
+
+    for box in board.boxes
+        if (new-pos == box)
+            let bproj = ('tile@ board (box + delta))
+            if (free? bproj)
+                box += delta
+            else
+                return false
+
     if (free? proj)
         board.player = new-pos
 
@@ -192,10 +213,10 @@ fn try-move (delta)
 
 fn win-condition? ()
     # check if we solved the level
-    if (('tile@ board board.player) == TileType.Goal)
-        true
-    else
-        false
+    for box in board.boxes
+        if (('tile@ board box) != TileType.Goal)
+            return false
+    true
 
 @@ 'on bottle.update
 fn (dt)
@@ -256,10 +277,13 @@ fn ()
             default
                 back-spr
 
-        bottle.graphics.sprite tileset ((vec2 x y) * 16) (quad = tsprite)
+        bottle.graphics.sprite tileset ((vec2 x y) * (16 * scaling)) (quad = tsprite) (scale = (vec2 scaling))
 
     for bomb in board.bombs
-        bottle.graphics.sprite tileset ((vec2 bomb.pos) * 16) (quad = (bomb-quads @ (bomb.timer - 1)))
+        bottle.graphics.sprite tileset ((vec2 bomb.pos) * (16 * scaling)) (quad = (bomb-quads @ (bomb.timer - 1))) (scale = (vec2 scaling))
+
+    for box in board.boxes
+        bottle.graphics.sprite tileset ((vec2 box) * (16 * scaling)) (quad = box-spr) (scale = (vec2 scaling))
 
 bottle.run;
 
