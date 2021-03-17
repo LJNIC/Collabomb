@@ -235,11 +235,6 @@ fn (dt)
         else
             false
 
-    # undo
-    local moved? = moved?
-    if (bottle.input.pressed? 'A)
-        moved? = (rollback-state history board)
-    
     if moved?
         for i in (rrange (countof board.bombs))
             let bomb = (board.bombs @ i)
@@ -251,6 +246,13 @@ fn (dt)
                         'clear@ board pos
                 'remove board.bombs i
 
+    # undo
+    # this is a bit confusing. Initially I added this variable so I would know movement
+      happened also with an undo (for sound effects), but for game logic you only care about movement forwards in time.
+    local moved? = moved?
+    if (bottle.input.pressed? 'A)
+        moved? = (rollback-state history board)
+    
     if (win-condition?)
         current-level += 1
         if (current-level < (countof levels))
