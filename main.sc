@@ -66,26 +66,40 @@ struct BoardState
         self.tiles @ (pos.y * self.dimensions.x + pos.x) = TileType.Free
 
 struct GameSnapshot
+    tiles  : (Array TileType)
     player : ivec2
     bombs  : (Array Bomb)
-    boxes  : (Array vec2)
+    boxes  : (Array ivec2)
 
     inline __typecall (cls board-state)
-        local bombs : (Array Bomb)
-        for bomb in board-state.bombs
-            'append bombs (copy bomb)
+        local this = (super-type.__typecall cls)
 
-        super-type.__typecall cls
-            player = (copy board-state.player)
-            bombs = (deref bombs)
+        # as long as we keep the names consistent with the 
+          ones used in BoardState, this will work ;)
+        va-map
+            inline (element)
+                for ?? in (getattr board-state element)
+                    'append (getattr this element) (copy ??)
+            _ 'tiles 'bombs 'boxes
+
+        this.player = (copy board-state.player)
+        this
 
 fn rollback-state (history board)
     if ((countof history) > 0)
         let snapshot = ('last history)
         board.player = (copy snapshot.player)
-        'clear board.bombs
-        for bomb in snapshot.bombs
-            'append board.bombs (copy bomb)
+
+        va-map
+            inline (element)
+                let dst = (getattr board element)
+                let src = (getattr snapshot element)
+                
+                'clear dst
+                for ?? in src
+                    'append dst (copy ??)
+            _ 'tiles 'bombs 'boxes
+
         'pop history
         true
     else
