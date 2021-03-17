@@ -83,8 +83,9 @@ fn rollback-state (history board)
     if ((countof history) > 0)
         let snapshot = ('last history)
         board.player = (copy snapshot.player)
-        for i bomb in (enumerate snapshot.bombs)
-            board.bombs @ i = (copy bomb)
+        'clear board.bombs
+        for bomb in snapshot.bombs
+            'append board.bombs (copy bomb)
         'pop history
         true
     else
