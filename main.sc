@@ -126,12 +126,12 @@ fn parse-board (n)
         pass (char "7")
         pass (char "8")
         pass (char "9")
+        do
             'append board.tiles TileType.Free
             local bomb : Bomb 
             bomb.pos = (ivec2 x y)
             bomb.timer = c - 48
             'append board.bombs bomb
-        do;
         case 10:i8
             board.dimensions.y += 1
             repeat 0 (y + 1)
