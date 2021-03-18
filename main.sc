@@ -42,6 +42,16 @@ global levels =
             XGXOOOOOOOXGX
             XXXXXXXXXXXXX
 
+        """"XXXXXXXXXXXXX
+            XOOOOO8OOOOOX
+            XOOOOO6OOOOOX
+            XOOOOO4OOOOOX
+            XOOOOO2OOOOOX
+            XOOOOOOOOOOOX
+            XOOOOOPOOOOOX
+            XOOOOOOOOOOOX
+            XOOOOOOOOOOOX
+            XXXXXXXXXXXXX
 enum TileType plain
     Free
     Wall
@@ -233,18 +243,36 @@ fn win-condition? ()
             return false
     true
 
+fn explode-bomb (index)
+    let bomb = (board.bombs @ index)
+    if (bomb.timer == 0)
+        for direction in directions
+            let pos = (bomb.pos + direction)
+            if (('tile@ board pos) == TileType.Fragile)
+                'clear@ board pos
+            
+            for other-bomb in board.bombs
+                if (other-bomb.pos == pos)
+                    other-bomb.timer = 1
+                    
+        'remove board.bombs index
+
 @@ 'on bottle.update
 fn (dt)
+    inline pressed? (key)
+        let held? rep = (bottle.input.holding? key 0.0)
+        rep
+
     let moved? =
-        if (bottle.input.pressed? 'Left)
+        if (pressed? 'Left)
             try-move (ivec2 -1 0)
-        elseif (bottle.input.pressed? 'Right)
+        elseif (pressed? 'Right)
             try-move (ivec2 1 0)
-        elseif (bottle.input.pressed? 'Down)
+        elseif (pressed? 'Down)
             try-move (ivec2 0 -1)
-        elseif (bottle.input.pressed? 'Up)
+        elseif (pressed? 'Up)
             try-move (ivec2 0 1)
-        elseif (bottle.input.pressed? 'B)
+        elseif (pressed? 'B)
             true
         else
             false
@@ -253,12 +281,9 @@ fn (dt)
         for i in (rrange (countof board.bombs))
             let bomb = (board.bombs @ i)
             bomb.timer -= 1
-            if (bomb.timer == 0)
-                for direction in directions
-                    let pos = (bomb.pos + direction)
-                    if (('tile@ board pos) == TileType.Fragile)
-                        'clear@ board pos
-                'remove board.bombs i
+        # we have to do this separately so they don't all explode at once if there is a chain reaction
+        for i in (rrange (countof board.bombs))
+            explode-bomb i
 
     # undo
     # this is a bit confusing. Initially I added this variable so I would know movement
