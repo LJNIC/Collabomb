@@ -42,16 +42,31 @@ global levels =
             XGXOOOOOOOXGX
             XXXXXXXXXXXXX
 
+        """"XXXXXXXXXX
+            XOOOOOOOOX
+            XOOOO6OOPX
+            XOOOXOXOOX
+            XGOOFOFVOX
+            XXXXXXXXXX
+
+        """"XXXXXXXXXX
+            XOOOOOOOOX
+            XVOOO6OOPX
+            XOOOOOOOOX
+            XOOOOOOOOX
+            XOOOOOOOOX
+            XXXXXXXXXX
+
         """"XXXXXXXXXXXXX
-            XOOOOO8OOOOOX
-            XOOOOO6OOOOOX
-            XOOOOO4OOOOOX
-            XOOOOO2OOOOOX
-            XOOOOOOOOOOOX
-            XOOOOOPOOOOOX
+            X00000000000X
+            X0XXXXXXXXX0X
+            X0XOOOOOOOX0X
+            X0OO3OPOOOX0X
+            XXXOOOOOOOXXX
             XOOOOOOOOOOOX
             XOOOOOOOOOOOX
             XXXXXXXXXXXXX
+
 enum TileType plain
     Free
     Wall
@@ -157,6 +172,12 @@ fn parse-board (n)
             bomb.pos = (ivec2 x y)
             bomb.timer = c - 48
             'append board.bombs bomb
+        case (char "0")
+            'append board.tiles TileType.Free
+            local bomb : Bomb 
+            bomb.pos = (ivec2 x y)
+            bomb.timer = 10
+            'append board.bombs bomb
         case 10:i8
             board.dimensions.y += 1
             repeat 0 (y + 1)
@@ -167,7 +188,7 @@ fn parse-board (n)
         _ (x + 1) y
     deref board
 
-global current-level : u32 0
+global current-level : u32 4
 global board : BoardState
 global history : (Array GameSnapshot)
 
@@ -199,7 +220,7 @@ fn ()
     box-spr = (create-quad 64 0)    
     back-spr = (create-quad 128 0)
     tileset = (Sprite "tileset.png")
-    for i in (range 9)
+    for i in (range 10)
         'append bomb-quads (create-quad (i * 16) 16)
 
 fn try-move (delta)
@@ -251,6 +272,11 @@ fn explode-bomb (index)
             if (('tile@ board pos) == TileType.Fragile)
                 'clear@ board pos
             
+            for i in (rrange (countof board.boxes))
+                let box = (board.boxes @ i)
+                if (box == pos)
+                    'remove board.boxes i
+            
             for other-bomb in board.bombs
                 if (other-bomb.pos == pos)
                     other-bomb.timer = 1
@@ -272,18 +298,20 @@ fn (dt)
             try-move (ivec2 0 -1)
         elseif (pressed? 'Up)
             try-move (ivec2 0 1)
-        elseif (pressed? 'B)
-            true
         else
             false
 
     if moved?
         for i in (rrange (countof board.bombs))
             let bomb = (board.bombs @ i)
-            bomb.timer -= 1
+            if (bomb.timer < 10)
+                bomb.timer -= 1
         # we have to do this separately so they don't all explode at once if there is a chain reaction
         for i in (rrange (countof board.bombs))
             explode-bomb i
+
+    if (bottle.input.pressed? 'B)
+        board = (parse-board current-level)
 
     # undo
     # this is a bit confusing. Initially I added this variable so I would know movement
@@ -318,7 +346,7 @@ fn ()
                 fragile-spr
             default
                 back-spr
-
+        
         bottle.graphics.sprite tileset ((vec2 x y) * (16 * scaling)) (quad = tsprite) (scale = (vec2 scaling))
 
     for bomb in board.bombs
