@@ -1,0 +1,12 @@
+-- format is data separated by commas:
+-- level width
+-- level height
+-- ground tile layer
+--    - = floor (indicates free passage)
+--    # = wall (blocked passage)
+--    . = goal
+-- object layer
+--    ~ = destructible wall (can be blown up)
+--    b = box
+--    B(n) = bomb, where n is an arbitrary long number of ticks remaining for explosion
+--    P = player
