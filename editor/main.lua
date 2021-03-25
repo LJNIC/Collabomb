@@ -62,10 +62,42 @@ local tools = {
 }
 
 local current_tool = tools[1]
+local level_width = 0
+local level_height = 0
+
+local selected_bomb_timer_text = ""
+local bomb_timer_last_typed = love.timer.getTime()
+local selected_bomb_timer = 0
+function love.textinput (t)
+    -- if you have the bomb selected, you can type to change the timer, it will stick.
+    if current_tool == tool_bomb then
+        if not ((love.timer.getTime() - bomb_timer_last_typed) < 0.5) then
+            selected_bomb_timer_text = ""
+        end
+        if tonumber(t) then
+            selected_bomb_timer_text = selected_bomb_timer_text .. t
+            selected_bomb_timer = tonumber(selected_bomb_timer_text)
+            bomb_timer_last_typed = love.timer.getTime()
+        end
+    end
+end
 
 function love.update(dt)
 	slab.Update(dt)
   
+    slab.BeginWindow('Level Size', {Title = "Level Size"})
+    slab.Text("width")
+    if slab.Input("level_width", {Text = tostring(level_width)}) then
+        local n = tonumber(slab.GetInputText("level_width"))
+        level_width = math.floor(n or 0)
+    end
+    slab.Text("height")
+    if slab.Input("level_height", {Text = tostring(level_height)}) then
+        local n = tonumber(slab.GetInputText("level_height"))
+        level_height = math.floor(n or 0)
+    end
+    slab.EndWindow()
+
 	slab.BeginWindow('Tools', {Title = "Tools"})
     slab.Text("Current: " .. tostring(tools[current_tool]))
     slab.Text("Ground")
@@ -87,7 +119,7 @@ function love.update(dt)
     if slab.Button("box") then
         current_tool = tools[5]
     end
-    if slab.Button("bomb") then
+    if slab.Button("bomb (" .. tostring(selected_bomb_timer) .. ")") then
         current_tool = tools[6]
     end
     if slab.Button("player") then
@@ -99,6 +131,8 @@ function love.update(dt)
         current_tool = tools[8]
     end
 	slab.EndWindow()
+
+    -- tool behaviour
 end
 
 function love.draw()
