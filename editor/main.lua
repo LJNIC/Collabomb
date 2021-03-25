@@ -33,6 +33,15 @@ local function init_board()
     end
 end
 
+local function export_board ()
+    local level_text = string.format("%d,%d,", level_width, level_height)
+    for k,v in ipairs(board) do
+        level_text = level_text .. v .. ","
+    end
+    love.system.setClipboardText(level_text)
+    love.window.showMessageBox("Exported!", "Your level data was copied to your clipboard.")
+end
+
 local function set_square (x,y, value)
     board[y * level_width + x + 1] = value
 end
@@ -72,9 +81,6 @@ local function tool_player (x, y)
     last_player = {x,y}
 end
 
-local function tool_pipette (x, y)
-end
-
 local tools = {
     tool_floor,
     tool_wall,
@@ -83,7 +89,6 @@ local tools = {
     tool_box,
     tool_bomb,
     tool_player,
-    tool_pipette,
     ---------------------
     [tool_floor] = "floor",
     [tool_wall] = "wall",
@@ -92,7 +97,6 @@ local tools = {
     [tool_box] = "box",
     [tool_bomb] = "bomb",
     [tool_player] = "player",
-    [tool_pipette] = "pipette"
 }
 
 local current_tool = tools[1]
@@ -185,8 +189,8 @@ function love.update(dt)
     end
 
     slab.Separator()
-    if slab.Button("pipette") then
-        current_tool = tools[8]
+    if slab.Button("Export") then
+        export_board()
     end
 	slab.EndWindow()
     if not panning and love.mouse.isDown(1) then
