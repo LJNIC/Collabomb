@@ -4,7 +4,7 @@
 -- ground tile layer
 --    - = floor (indicates free passage)
 --    # = wall (blocked passage)
---    . = goal
+--    G = goal
 -- object layer
 --    ~ = destructible wall (can be blown up)
 --    b = box
@@ -18,25 +18,58 @@ function love.load (args)
     love.graphics.setBackgroundColor(0.14,0.14,0.14)
 end
 
+local level_width = 0
+local level_height = 0
+local level_origin = {0,0}
+local SQ_SIZE = 40
+
+local board = {}
+local function init_board()
+    board = {}
+    for y=0, level_height-1 do
+        for x=0, level_width-1 do
+            board[y * level_width + x + 1] = "-"
+        end
+    end
+end
+
+local function set_square (x,y, value)
+    board[y * level_width + x + 1] = value
+end
+
 local function tool_floor (x, y)
+   set_square(x,y, "-") 
 end
 
 local function tool_wall (x, y)
+   set_square(x,y, "#") 
 end
 
 local function tool_goal (x, y)
+   set_square(x,y, "G") 
 end
 
 local function tool_dwall (x, y)
+   set_square(x,y, "~") 
 end
 
 local function tool_box (x, y)
+   set_square(x,y, "b") 
 end
 
+local selected_bomb_timer = 0
 local function tool_bomb (x, y)
+   set_square(x,y, "B" .. tostring(selected_bomb_timer)) 
 end
 
+local last_player
 local function tool_player (x, y)
+    if last_player then
+        local px,py = unpack(last_player)
+        set_square(px,py, "-")
+    end
+    set_square(x,y, "P")
+    last_player = {x,y}
 end
 
 local function tool_pipette (x, y)
@@ -63,14 +96,9 @@ local tools = {
 }
 
 local current_tool = tools[1]
-local level_width = 0
-local level_height = 0
-local level_origin = {0,0}
-local SQ_SIZE = 30
 
 local selected_bomb_timer_text = ""
 local bomb_timer_last_typed = love.timer.getTime()
-local selected_bomb_timer = 0
 function love.textinput (t)
     -- if you have the bomb selected, you can type to change the timer, it will stick.
     if current_tool == tool_bomb then
@@ -118,11 +146,13 @@ function love.update(dt)
     if slab.Input("level_width", {Text = tostring(level_width)}) then
         local n = tonumber(slab.GetInputText("level_width"))
         level_width = math.floor(n or 0)
+        init_board()
     end
     slab.Text("height")
     if slab.Input("level_height", {Text = tostring(level_height)}) then
         local n = tonumber(slab.GetInputText("level_height"))
         level_height = math.floor(n or 0)
+        init_board()
     end
     slab.EndWindow()
 
@@ -159,7 +189,12 @@ function love.update(dt)
         current_tool = tools[8]
     end
 	slab.EndWindow()
-
+    if not panning and love.mouse.isDown(1) then
+        local sqx, sqy = current_tile()
+        if sqx >= 0 and sqx < level_width and sqy >= 0 and sqy < level_height then
+            current_tool(sqx, sqy)
+        end
+    end
 end
 
 function love.draw()
@@ -184,6 +219,15 @@ function love.draw()
         if sqx >= 0 and sqx < level_width and sqy >= 0 and sqy < level_height then
             love.graphics.rectangle('fill', lx + sqx * SQ_SIZE, ly + sqy * SQ_SIZE, SQ_SIZE, SQ_SIZE)
         end
+
     end
+    -- square info
+    for y=0, level_height-1 do
+        for x=0, level_width-1 do
+            local sqx, sqy = current_tile()
+            love.graphics.print(board[y * level_width + x + 1], lx + x * SQ_SIZE + 5, ly + y * SQ_SIZE + 5)
+        end
+    end
+
 	slab.Draw()
 end
