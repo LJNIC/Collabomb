@@ -38,6 +38,7 @@ local function export_board ()
     for k,v in ipairs(board) do
         level_text = level_text .. v .. ","
     end
+    level_text = string.sub(level_text, 0, -2)
     love.system.setClipboardText(level_text)
     love.window.showMessageBox("Exported!", "Your level data was copied to your clipboard.")
 end
