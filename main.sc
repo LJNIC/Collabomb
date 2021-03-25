@@ -4,6 +4,7 @@ using import struct
 using import enum
 using import Array
 using import UTF-8
+using import .level-load
 import .bottle
 from bottle.graphics let Sprite
 
@@ -67,29 +68,6 @@ global levels =
             XOOOOOOOOOOOX
             XXXXXXXXXXXXX
 
-enum TileType plain
-    Free
-    Wall
-    Fragile
-    Goal
-
-struct Bomb plain
-    pos   : ivec2
-    timer : u32
-
-struct BoardState
-    tiles      : (Array TileType)
-    dimensions : ivec2
-    bombs      : (Array Bomb)
-    boxes      : (Array ivec2)
-    player     : ivec2
-
-    inline tile@ (self pos)
-        self.tiles @ (pos.y * self.dimensions.x + pos.x)
-    
-    inline clear@ (self pos)
-        self.tiles @ (pos.y * self.dimensions.x + pos.x) = TileType.Free
-
 struct GameSnapshot
     tiles  : (Array TileType)
     player : ivec2
@@ -130,64 +108,6 @@ fn rollback-state (history board)
     else
         false
 
-fn parse-board (n)
-    let board-str = (levels @ n)
-
-    # we assume the first line dictates width for the whole board.
-    local board : BoardState
-    fold (width = 0) for c in board-str
-        if (c == 10:i8)
-            board.dimensions.x = width
-            break width
-        width + 1
-
-    fold (x y = 0 0) for c in board-str
-        switch c
-        case (char "X")
-            'append board.tiles TileType.Wall
-        case (char "O")
-            'append board.tiles TileType.Free
-        case (char "G")
-            'append board.tiles TileType.Goal
-        case (char "P")
-            'append board.tiles TileType.Free
-            board.player = (ivec2 x y)
-        case (char "F")
-            'append board.tiles TileType.Fragile
-        case (char "V")
-            'append board.tiles TileType.Free
-            'append board.boxes (ivec2 x y) 
-        pass (char "1") 
-        pass (char "2")
-        pass (char "3")
-        pass (char "4")
-        pass (char "5")
-        pass (char "6")
-        pass (char "7")
-        pass (char "8")
-        pass (char "9")
-        do
-            'append board.tiles TileType.Free
-            local bomb : Bomb 
-            bomb.pos = (ivec2 x y)
-            bomb.timer = c - 48
-            'append board.bombs bomb
-        case (char "0")
-            'append board.tiles TileType.Free
-            local bomb : Bomb 
-            bomb.pos = (ivec2 x y)
-            bomb.timer = 10
-            'append board.bombs bomb
-        case 10:i8
-            board.dimensions.y += 1
-            repeat 0 (y + 1)
-        default
-            assert false "unrecognized tile type"
-            unreachable;
-
-        _ (x + 1) y
-    deref board
-
 global current-level : u32 4
 global board : BoardState
 global history : (Array GameSnapshot)
@@ -212,7 +132,8 @@ global bomb-quads : (Array vec4)
 
 @@ 'on bottle.load
 fn ()
-    board = (parse-board current-level)
+    board = (load-level "level.txt")
+    print board.player
     player-spr = (create-quad 0 0)
     goal-spr = (create-quad 16 0)
     wall-spr = (create-quad 32 0)
@@ -320,7 +241,7 @@ fn (dt)
     if (bottle.input.pressed? 'A)
         moved? = (rollback-state history board)
     
-    if (win-condition?)
+    #if (win-condition?)
         current-level += 1
         if (current-level < (countof levels))
             board = (parse-board current-level)
