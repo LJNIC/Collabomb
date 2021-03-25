@@ -66,6 +66,7 @@ local current_tool = tools[1]
 local level_width = 0
 local level_height = 0
 local level_origin = {0,0}
+local SQ_SIZE = 30
 
 local selected_bomb_timer_text = ""
 local bomb_timer_last_typed = love.timer.getTime()
@@ -101,6 +102,12 @@ function love.mousereleased(x,y,b)
         level_origin = {lx,ly}
         panning = false
     end
+end
+
+local function current_tile ()
+    local mx, my = love.mouse.getPosition()
+    local lx, ly = unpack(level_origin)
+    return math.floor((mx - lx) / SQ_SIZE), math.floor((my - ly) / SQ_SIZE)
 end
 
 function love.update(dt)
@@ -165,10 +172,18 @@ function love.draw()
     end
 
     for x=0,level_width do
-        love.graphics.line(lx+x*30, ly, lx+x*30, ly+level_height*30)
+        love.graphics.line(lx+x*SQ_SIZE, ly, lx+x*SQ_SIZE, ly+level_height*SQ_SIZE)
     end
     for y=0,level_height do
-        love.graphics.line(lx, ly+y*30, lx+level_width*30, ly+y*30)
+        love.graphics.line(lx, ly+y*SQ_SIZE, lx+level_width*SQ_SIZE, ly+y*SQ_SIZE)
+    end
+
+    -- selected square
+    if not panning then
+        local sqx, sqy = current_tile()
+        if sqx >= 0 and sqx < level_width and sqy >= 0 and sqy < level_height then
+            love.graphics.rectangle('fill', lx + sqx * SQ_SIZE, ly + sqy * SQ_SIZE, SQ_SIZE, SQ_SIZE)
+        end
     end
 	slab.Draw()
 end
