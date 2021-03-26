@@ -108,7 +108,8 @@ fn rollback-state (history board)
     else
         false
 
-global current-level : u32 4
+global current-level : u32 3
+global level-count : u32 3
 global board : BoardState
 global history : (Array GameSnapshot)
 
@@ -130,10 +131,13 @@ global box-spr     : vec4
 global tileset  : Sprite
 global bomb-quads : (Array vec4)
 
+fn load-level-num (num)
+    local level-file = (.. "levels/level" (String (dec num)) ".txt")
+    (load-level level-file)
+
 @@ 'on bottle.load
 fn ()
-    board = (load-level "level.txt")
-    print board.player
+    board = (load-level-num current-level)
     player-spr = (create-quad 0 0)
     goal-spr = (create-quad 16 0)
     wall-spr = (create-quad 32 0)
@@ -232,7 +236,7 @@ fn (dt)
             explode-bomb i
 
     if (bottle.input.pressed? 'B)
-        board = (parse-board current-level)
+        board = (load-level-num current-level)
 
     # undo
     # this is a bit confusing. Initially I added this variable so I would know movement
@@ -241,10 +245,10 @@ fn (dt)
     if (bottle.input.pressed? 'A)
         moved? = (rollback-state history board)
     
-    #if (win-condition?)
+    if (win-condition?)
         current-level += 1
-        if (current-level < (countof levels))
-            board = (parse-board current-level)
+        if (current-level <= level-count)
+            board = (load-level-num current-level)
         'clear history
 
 @@ 'on bottle.draw

@@ -80,7 +80,7 @@ fn load-level (file)
             'append board.tiles TileType.Wall
         case (char "-")
             'append board.tiles TileType.Free
-        case (char ".")
+        case (char "G")
             'append board.tiles TileType.Goal
         case (char "P")
             'append board.tiles TileType.Free
@@ -97,6 +97,7 @@ fn load-level (file)
             bomb.timer = (string->num (& (token @ 1))) as u32
             'append board.bombs bomb
         default
+            print token
             assert false "unrecognized tile type"
             unreachable;
         
