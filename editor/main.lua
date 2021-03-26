@@ -8,7 +8,7 @@
 -- object layer
 --    ~ = destructible wall (can be blown up)
 --    b = box
---    B(n) = bomb, where n is an arbitrary long number of ticks remaining for explosion
+--    Bn = bomb, where n is an arbitrary long number of ticks remaining for explosion eg. B99
 --    P = player
 
 local slab = require "Slab"
