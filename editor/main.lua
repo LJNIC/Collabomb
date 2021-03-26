@@ -16,6 +16,7 @@ local slab = require "Slab"
 function love.load (args)
     slab.Initialize(args)
     love.graphics.setBackgroundColor(0.14,0.14,0.14)
+    love.filesystem.setIdentity("CollabombEditor")
 end
 
 local level_width = 0
@@ -33,14 +34,15 @@ local function init_board()
     end
 end
 
+local show_level_save_win = false
+local level_savename = "levelname.skb"
 local function export_board ()
     local level_text = string.format("%d,%d,", level_width, level_height)
     for k,v in ipairs(board) do
         level_text = level_text .. v .. ","
     end
     level_text = string.sub(level_text, 0, -2)
-    love.system.setClipboardText(level_text)
-    love.window.showMessageBox("Exported!", "Your level data was copied to your clipboard.")
+    love.filesystem.write(level_savename, level_text)
 end
 
 local function set_square (x,y, value)
@@ -190,6 +192,9 @@ function love.update(dt)
     end
 
     slab.Separator()
+    if slab.Input("savename", {Text = level_savename}) then
+        level_savename = slab.GetInputText("savename")
+    end
     if slab.Button("Export") then
         export_board()
     end
@@ -203,6 +208,7 @@ function love.update(dt)
 end
 
 function love.draw()
+    love.graphics.setColor(1,1,1,1)
     local lx,ly = unpack(level_origin)
     -- animate panning
     if panning then
