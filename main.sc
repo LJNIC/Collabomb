@@ -187,7 +187,7 @@ fn win-condition? ()
     for box in board.boxes
         if (('tile@ board box) != TileType.Goal)
             return false
-    true
+    not (empty? board.boxes)
 
 fn explode-bomb (index)
     let bomb = (board.bombs @ index)
