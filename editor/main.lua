@@ -120,6 +120,21 @@ function love.textinput (t)
     end
 end
 
+local key_to_tool = {
+    ["f"] = 1,
+    ["w"] = 2,
+    ["g"] = 3,
+    ["d"] = 4,
+    ["b"] = 5,
+    ["o"] = 6,
+    ["p"] = 7
+}
+function love.keypressed(key)
+    if key_to_tool[key] then
+        current_tool = tools[key_to_tool[key]]
+    end
+end
+
 local panning = false
 local pan_start = {0,0}
 function love.mousepressed(x,y,b)
