@@ -11,63 +11,6 @@ from bottle.graphics let Sprite
 global directions = (arrayof ivec2 (ivec2 1 0) (ivec2 0 1) (ivec2 -1 0) (ivec2 0 -1))
 global scaling = 3.0
 
-global levels =
-    arrayof String
-        """"XXXXXXXXXX
-            XOOOOOOOOX
-            XGOOOVOOPX
-            XOOOOOOOOX
-            XXXXXXXXXX
-
-        """"XXXXXXXXXXXX
-            XOOFOOOOOOOX
-            XGFOO3OPOVOX
-            XOOFOOOOOOOX
-            XXXXXXXXXXXX
-
-        """"XXXXXXXXXXXXX
-            XOOOOOOOOOOOX
-            XOOFOOOOOOOOX
-            XOFGFOX9OPOOX
-            XOOFOOOOOOOOX
-            XXXXXXXXXXXXX
-
-        """"XXXXXXXXXXXXX
-            XOOOOXGXOOOOX
-            XOOOOXVXOOOOX
-            XOXXXXFXXXXOX
-            XOXOOOOOOOXOX
-            XOXOOO9OOOXOX
-            XOFOO8P7OOFOX
-            XVXOOOOOOOXVX
-            XGXOOOOOOOXGX
-            XXXXXXXXXXXXX
-
-        """"XXXXXXXXXX
-            XOOOOOOOOX
-            XOOOO6OOPX
-            XOOOXOXOOX
-            XGOOFOFVOX
-            XXXXXXXXXX
-
-        """"XXXXXXXXXX
-            XOOOOOOOOX
-            XVOOO6OOPX
-            XOOOOOOOOX
-            XOOOOOOOOX
-            XOOOOOOOOX
-            XXXXXXXXXX
-
-        """"XXXXXXXXXXXXX
-            X00000000000X
-            X0XXXXXXXXX0X
-            X0XOOOOOOOX0X
-            X0OO3OPOOOX0X
-            XXXOOOOOOOXXX
-            XOOOOOOOOOOOX
-            XOOOOOOOOOOOX
-            XXXXXXXXXXXXX
-
 struct GameSnapshot
     tiles  : (Array TileType)
     player : ivec2
@@ -108,8 +51,8 @@ fn rollback-state (history board)
     else
         false
 
-global current-level : u32 3
-global level-count : u32 3
+global current-level : u32 1
+global level-count : u32 5
 global board : BoardState
 global history : (Array GameSnapshot)
 
@@ -147,6 +90,7 @@ fn ()
     tileset = (Sprite "tileset.png")
     for i in (range 10)
         'append bomb-quads (create-quad (i * 16) 16)
+    'append bomb-quads (create-quad (9 * 16) 16)
 
 fn try-move (delta)
     # we record the state before trying to move, but only append
@@ -187,7 +131,7 @@ fn win-condition? ()
     for box in board.boxes
         if (('tile@ board box) != TileType.Goal)
             return false
-    not (empty? board.boxes)
+    true
 
 fn explode-bomb (index)
     let bomb = (board.bombs @ index)
@@ -245,10 +189,15 @@ fn (dt)
     if (bottle.input.pressed? 'A)
         moved? = (rollback-state history board)
     
-    if (win-condition?)
+    if (or (win-condition?) (bottle.input.pressed? 'Y))
         current-level += 1
         if (current-level <= level-count)
             board = (load-level-num current-level)
+        'clear history
+
+    if (and (bottle.input.pressed? 'X) (current-level > 1))
+        current-level -= 1
+        board = (load-level-num current-level)
         'clear history
 
 @@ 'on bottle.draw
