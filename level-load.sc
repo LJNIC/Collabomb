@@ -67,7 +67,7 @@ fn string->num (str)
 
 fn load-level (file)
     local board : BoardState
-    local tokens = (parse-csv (bottle.io.load-file-string file))
+    local tokens = (parse-csv ('force-unwrap (bottle.io.load-file-string file)))
 
     local width = (string->num ('remove tokens 0))
     local height = (string->num ('remove tokens 0))
