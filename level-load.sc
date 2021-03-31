@@ -5,12 +5,16 @@ using import UTF-8
 using import struct 
 using import enum
 using import Array
+using import itertools
 
 enum TileType plain
     Free
     Wall
     Fragile
     Goal
+
+    inline __typecall (cls)
+        this-type.Free
 
 struct Bomb plain
     pos   : ivec2
@@ -30,10 +34,6 @@ struct BoardState
         self.tiles @ (pos.y * self.dimensions.x + pos.x) = TileType.Free
 
 fn parse-csv (input)
-    using import Array
-    using import String
-    using import UTF-8
-
     local values : (Array String)
     local value : String
     # not UTF-8 aware.
@@ -72,39 +72,36 @@ fn load-level (file)
     local width = (string->num ('remove tokens 0))
     local height = (string->num ('remove tokens 0))
     board.dimensions = (ivec2 width height)
+    'resize board.tiles (width * height)
 
-    fold (x y = 0 0) for token in tokens
+    for i x y in (enumerate (dim width height))
+        let token = (tokens @ i)
         local c = (token @ 0)
+        local index = ((height - y - 1) * width + x)
         switch c
         case (char "#")
-            'append board.tiles TileType.Wall
+            board.tiles @ index = TileType.Wall
         case (char "-")
-            'append board.tiles TileType.Free
+            board.tiles @ index = TileType.Free
         case (char "G")
-            'append board.tiles TileType.Goal
+            board.tiles @ index = TileType.Goal
         case (char "P")
-            'append board.tiles TileType.Free
-            board.player = (ivec2 x y)
+            board.tiles @ index = TileType.Free
+            board.player = (ivec2 x (height - y - 1))
         case (char "~")
-            'append board.tiles TileType.Fragile
+            board.tiles @ index = TileType.Fragile
         case (char "b")
-            'append board.tiles TileType.Free
-            'append board.boxes (ivec2 x y) 
+            board.tiles @ index = TileType.Free
+            'append board.boxes (ivec2 x (height - y - 1)) 
         case (char "B")
-            'append board.tiles TileType.Free
+            board.tiles @ index = TileType.Free
             local bomb : Bomb 
-            bomb.pos = (ivec2 x y)
+            bomb.pos = (ivec2 x (height - y - 1))
             bomb.timer = (string->num (& (token @ 1))) as u32
             'append board.bombs bomb
         default
-            print token
             assert false "unrecognized tile type"
             unreachable;
-        
-        if (x == (width - 1))
-            _ 0 (y + 1)
-        else
-            _ (x + 1) y
     deref board
 
 do 

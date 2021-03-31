@@ -52,7 +52,7 @@ fn rollback-state (history board)
         false
 
 global current-level : u32 1
-global level-count : u32 5
+global level-count : u32 6
 global board : BoardState
 global history : (Array GameSnapshot)
 
