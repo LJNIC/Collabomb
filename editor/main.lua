@@ -34,6 +34,21 @@ local function init_board()
     end
 end
 
+local function resize_board(width, height)
+    local old_board = board
+    local srcw, srch = level_width, level_height
+    level_width, level_height = width, height
+    init_board()
+    -- for some reason this works when the board is smaller than before, and I don't get why
+    for y=0, srch-1 do
+        for x=0, srcw-1 do
+            local src = y * srcw + x + 1
+            local dst = y * width + x + 1
+            board[dst] = old_board[src]
+        end
+    end
+end
+
 local show_level_save_win = false
 local level_savename = "levelname.skb"
 local function export_board ()
@@ -167,14 +182,16 @@ function love.update(dt)
     slab.Text("width")
     if slab.Input("level_width", {Text = tostring(level_width)}) then
         local n = tonumber(slab.GetInputText("level_width"))
-        level_width = math.floor(n or 0)
-        init_board()
+        if (not slab.IsInputFocused("level_width")) then
+            resize_board(math.floor(n or 0), level_height)
+        end
     end
     slab.Text("height")
     if slab.Input("level_height", {Text = tostring(level_height)}) then
         local n = tonumber(slab.GetInputText("level_height"))
-        level_height = math.floor(n or 0)
-        init_board()
+        if (not slab.IsInputFocused("level_height")) then
+            resize_board(level_width, math.floor(n or 0))
+        end
     end
     slab.EndWindow()
 
