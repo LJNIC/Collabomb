@@ -231,6 +231,9 @@ function love.update(dt)
     if slab.Button("Export") then
         export_board()
     end
+    if slab.Button("Clear") then
+        init_board()
+    end
 	slab.EndWindow()
     if not panning and love.mouse.isDown(1) then
         local sqx, sqy = current_tile()
