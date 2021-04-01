@@ -39,9 +39,10 @@ local function resize_board(width, height)
     local srcw, srch = level_width, level_height
     level_width, level_height = width, height
     init_board()
-    -- for some reason this works when the board is smaller than before, and I don't get why
-    for y=0, srch-1 do
-        for x=0, srcw-1 do
+
+    -- for the case where the board is smaller than previously, we only iterate up to the actual new dimensions.
+    for y=0, math.min(srch, height)-1 do
+        for x=0, math.min(srcw, width)-1 do
             local src = y * srcw + x + 1
             local dst = y * width + x + 1
             board[dst] = old_board[src]
