@@ -52,7 +52,7 @@ fn rollback-state (history board)
         false
 
 global current-level : u32 1
-global level-count : u32 6
+global level-count : u32 8
 global board : BoardState
 global history : (Array GameSnapshot)
 
@@ -208,10 +208,7 @@ fn ()
         let tsprite =
             switch t
             case TileType.Free
-                if (board.player == (ivec2 x y))
-                    player-spr
-                else
-                    back-spr
+                back-spr
             case TileType.Wall
                 wall-spr
             case TileType.Goal
@@ -228,6 +225,8 @@ fn ()
 
     for box in board.boxes
         bottle.graphics.sprite tileset ((vec2 box) * (16 * scaling)) (quad = box-spr) (scale = (vec2 scaling))
+    
+    bottle.graphics.sprite tileset ((vec2 board.player) * 16 * scaling) (quad = player-spr) (scale = (vec2 scaling))
 
 bottle.run;
 
