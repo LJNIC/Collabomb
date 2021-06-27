@@ -4,6 +4,7 @@ using import struct
 using import enum
 using import Array
 using import UTF-8
+using import Rc
 using import .level-load
 import .bottle
 from bottle.graphics let Sprite
@@ -56,23 +57,17 @@ global level-count : u32 8
 global board : BoardState
 global history : (Array GameSnapshot)
 
-@@ 'on bottle.config
-fn (cfg)
-    cfg
-
 fn create-quad (x y)
-    let normal-x = (x / 160)
-    let normal-y = (y / 160)
-    (vec4 normal-x normal-y (normal-x + (16 / 160)) (normal-y + (16 / 160)))
+    ivec4 x y (x + 16) (y + 16)
 
-global player-spr  : vec4
-global wall-spr    : vec4
-global goal-spr    : vec4 
-global back-spr    : vec4
-global fragile-spr : vec4
-global box-spr     : vec4
-global tileset  : Sprite
-global bomb-quads : (Array vec4)
+global player-spr  : ivec4
+global wall-spr    : ivec4
+global goal-spr    : ivec4 
+global back-spr    : ivec4
+global fragile-spr : ivec4
+global box-spr     : ivec4
+global tileset  : (Rc Sprite)
+global bomb-quads : (Array ivec4)
 
 fn load-level-num (num)
     local level-file = (.. "levels/level" (String (dec num)) ".txt")

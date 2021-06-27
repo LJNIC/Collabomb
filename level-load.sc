@@ -43,7 +43,7 @@ fn parse-csv (input)
             break;
         c := input @ idx
 
-        if (c == (char ","))
+        if (c == (char32 ","))
             'append values (copy value)
             'clear value
         else
@@ -79,21 +79,21 @@ fn load-level (file)
         local c = (token @ 0)
         local index = ((height - y - 1) * width + x)
         switch c
-        case (char "#")
+        case (char32 "#")
             board.tiles @ index = TileType.Wall
-        case (char "-")
+        case (char32 "-")
             board.tiles @ index = TileType.Free
-        case (char "G")
+        case (char32 "G")
             board.tiles @ index = TileType.Goal
-        case (char "P")
+        case (char32 "P")
             board.tiles @ index = TileType.Free
             board.player = (ivec2 x (height - y - 1))
-        case (char "~")
+        case (char32 "~")
             board.tiles @ index = TileType.Fragile
-        case (char "b")
+        case (char32 "b")
             board.tiles @ index = TileType.Free
             'append board.boxes (ivec2 x (height - y - 1)) 
-        case (char "B")
+        case (char32 "B")
             board.tiles @ index = TileType.Free
             local bomb : Bomb 
             bomb.pos = (ivec2 x (height - y - 1))
